@@ -5,8 +5,8 @@ def main(argv=None):
     # Run bootstrap logic
     app_state = Bootstrap().run(argv)
     # further processing can go here
-    
-    Core(app_state).run()
+
+    Core().run(app_state)
 
 
 if __name__ == "__main__":

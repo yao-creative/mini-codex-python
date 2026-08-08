@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
+from re import A
 from states.config import Config
 from states.app_state import AppState
+from states.core_state import CoreState
+from states.command_queue import CommandQueueState
+from states.event_bus import EventBusState
+from states.conversation_state import ConversationState
+from states.agent_state import AgentState
+from states.worker_state import WorkerState
+
 import argparse
 import os
 from dotenv import load_dotenv
-
-
-
-
 
 def parse_and_load_env(argv: list[str] | None = None) -> tuple[argparse.Namespace, list[str], Config]:
     parser = argparse.ArgumentParser(description="Bootstrap your app with configuration")
@@ -34,6 +38,17 @@ class Bootstrap_interface(ABC):
 class Bootstrap(Bootstrap_interface):
     def __init__(self):
         pass
-    def run(self, argv: list[str]) -> AppState:
+
+    @staticmethod
+    def run(argv: list[str]) -> AppState:
         args, unknown, config = parse_and_load_env(argv)
-        return AppState(config)
+
+        core_state =  CoreState(
+            command_queue_state=CommandQueueState(),
+            event_bus_state=EventBusState(),
+            conversation_state=ConversationState(),
+            agent_state=AgentState(config.agent),
+            worker_state=WorkerState(config.workers),
+        )
+        
+        return AppState(config, core_state)

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class EventBusInterface(ABC):
+class EventBusManagerInterface(ABC):
     @abstractmethod
     def __init__(self):
         pass
@@ -9,10 +9,11 @@ class EventBusInterface(ABC):
     async def publish(self, event):
         pass
 
-class EventBus(EventBusInterface):
-    def __init__(self, subscribers):
-        self.subscribers = []
+class EventBusManager(EventBusManagerInterface):
+    def __init__(self):
+        pass
 
-    async def publish(self, event):
+    @staticmethod
+    async def publish(self, event_bus_state: EventBusState, event: Event):
         for subscriber in self.subscribers:
             await subscriber(event)
