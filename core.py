@@ -37,8 +37,8 @@ class Core(CoreInterface):
         pass 
 
     # constructor case for Even driven core.
-    @abstractmethod
-    def step(self, state: CoreState, event: Event):
+    @staticmethod
+    def apply(state: CoreState, event: Event):
         # OR disjunction of matching managers to events
         manager = Core._MANAGERS[type(event)]
         factor = getattr(state, manager.FIELD)
@@ -48,5 +48,5 @@ class Core(CoreInterface):
     @staticmethod
     def run(state: CoreState, events: Iterable[Event]) -> AppState:
         for e in events:
-            state = Core.step(state, e)
+            state = Core.apply(state, e)
         return state
