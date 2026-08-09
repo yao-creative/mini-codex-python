@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+
+# Ruff cache
+.ruff_cache/
+
+# MicroPython .mpy caches and compiled files
+.mypy_cache/
