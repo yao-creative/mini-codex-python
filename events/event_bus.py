@@ -13,8 +13,6 @@ class EventBusEvent(Event):
 # TODO: Define EventPayload type or class according to the requirements of EventBus events.
 # For now, this is a placeholder and must be replaced/implemented.
 EventPayload = object
-
-@dataclass(frozen=True)
 # the fact being broadcast — this IS the thing every subscriber will eventually poll
 @dataclass(frozen=True)
 class Publish(EventBusEvent):
