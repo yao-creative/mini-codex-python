@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TypeVar
 
-from events.event import Event
+from events.base import Event
 
 T = TypeVar("T", bound=Event)
 Handler = Callable[[T], None]

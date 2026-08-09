@@ -8,7 +8,7 @@ from states.worker_runtime import WorkerRuntimeState
 
 
 @dataclass
-class Core:
+class CoreState:
     agent_state: AgentRuntimeState
     conversation_state: ConversationRuntimeState
     workers_state: WorkerRuntimeState

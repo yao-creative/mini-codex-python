@@ -1,4 +1,5 @@
 from commands.command import Command
+from dataclasses import dataclass
 from events.command_queue import (
     Cancel,
     Clear,
