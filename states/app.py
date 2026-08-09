@@ -1,9 +1,10 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-import uuid
 
 from states.config import Config
 from states.core import CoreState
+
 
 @dataclass
 class AppState:

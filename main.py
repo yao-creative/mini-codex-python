@@ -1,5 +1,5 @@
-from bootstrap import bootstrap
 from core import Core
+
 
 def main(argv=None):
     # Run bootstrap logic
