@@ -9,19 +9,23 @@ $$S_{agent} = \text{Idle} + \text{Running} + \text{AwaitingTool} + \text{Error}$
 class Idle:
     pass
 
+
 @dataclass(frozen=True)
 class Running:
-    request_id: str          # handle to the in-flight LLM call — prevents double-dispatch (typestate point)
+    request_id: str  # handle to the in-flight LLM call — prevents double-dispatch (typestate point)
+
 
 @dataclass(frozen=True)
 class AwaitingTool:
-    request_id: str          # the LLM turn this tool call belongs to
-    pending_tool_call: str   # id of the ToolCall dispatched to WorkerManager
+    request_id: str  # the LLM turn this tool call belongs to
+    pending_tool_call: str  # id of the ToolCall dispatched to WorkerManager
+
 
 @dataclass(frozen=True)
 class Error:
     reason: str
     recoverable: bool
+
 
 AgentState = Union[Idle, Running, AwaitingTool, Error]
 ```
@@ -49,63 +53,103 @@ graph LR
 ```python
 class AgentManager:
     @staticmethod
-    def start(state: AgentState, bus: EventBusState, request_id: str) -> Result[AgentState, IllegalTransition]:
+    def start(
+        state: AgentState, bus: EventBusState, request_id: str
+    ) -> Result[AgentState, IllegalTransition]:
         match state:
             case Idle():
                 new = Running(request_id=request_id)
                 AgentManager._announce(bus, "Idle", "Running")
                 return Ok(new)
             case _:
-                return Err(IllegalTransition(f"start requires Idle, got {type(state).__name__}"))
+                return Err(
+                    IllegalTransition(
+                        f"start requires Idle, got {type(state).__name__}"
+                    )
+                )
 
     @staticmethod
-    def needs_tool(state: AgentState, bus: EventBusState, tool_call_id: str) -> Result[AgentState, IllegalTransition]:
+    def needs_tool(
+        state: AgentState, bus: EventBusState, tool_call_id: str
+    ) -> Result[AgentState, IllegalTransition]:
         match state:
             case Running(request_id=rid):
                 new = AwaitingTool(request_id=rid, pending_tool_call=tool_call_id)
                 AgentManager._announce(bus, "Running", "AwaitingTool")
                 return Ok(new)
             case _:
-                return Err(IllegalTransition(f"needs_tool requires Running, got {type(state).__name__}"))
+                return Err(
+                    IllegalTransition(
+                        f"needs_tool requires Running, got {type(state).__name__}"
+                    )
+                )
 
     @staticmethod
-    def resume(state: AgentState, bus: EventBusState) -> Result[AgentState, IllegalTransition]:
+    def resume(
+        state: AgentState, bus: EventBusState
+    ) -> Result[AgentState, IllegalTransition]:
         match state:
             case AwaitingTool(request_id=rid):
                 new = Running(request_id=rid)
                 AgentManager._announce(bus, "AwaitingTool", "Running")
                 return Ok(new)
             case _:
-                return Err(IllegalTransition(f"resume requires AwaitingTool, got {type(state).__name__}"))
+                return Err(
+                    IllegalTransition(
+                        f"resume requires AwaitingTool, got {type(state).__name__}"
+                    )
+                )
 
     @staticmethod
-    def finish(state: AgentState, bus: EventBusState) -> Result[AgentState, IllegalTransition]:
+    def finish(
+        state: AgentState, bus: EventBusState
+    ) -> Result[AgentState, IllegalTransition]:
         match state:
             case Running():
                 AgentManager._announce(bus, "Running", "Idle")
                 return Ok(Idle())
             case _:
-                return Err(IllegalTransition(f"finish requires Running, got {type(state).__name__}"))
+                return Err(
+                    IllegalTransition(
+                        f"finish requires Running, got {type(state).__name__}"
+                    )
+                )
 
     @staticmethod
-    def fail(state: AgentState, bus: EventBusState, reason: str, recoverable: bool) -> AgentState:
+    def fail(
+        state: AgentState, bus: EventBusState, reason: str, recoverable: bool
+    ) -> AgentState:
         AgentManager._announce(bus, type(state).__name__, "Error")
-        return Error(reason=reason, recoverable=recoverable)   # total — fail is defined from every state, so no Result
+        return Error(
+            reason=reason, recoverable=recoverable
+        )  # total — fail is defined from every state, so no Result
 
     @staticmethod
-    def recover(state: AgentState, bus: EventBusState) -> Result[AgentState, IllegalTransition]:
+    def recover(
+        state: AgentState, bus: EventBusState
+    ) -> Result[AgentState, IllegalTransition]:
         match state:
             case Error(recoverable=True):
                 AgentManager._announce(bus, "Error", "Idle")
                 return Ok(Idle())
             case Error(recoverable=False):
-                return Err(IllegalTransition("unrecoverable error — process must restart, not recover"))
+                return Err(
+                    IllegalTransition(
+                        "unrecoverable error — process must restart, not recover"
+                    )
+                )
             case _:
-                return Err(IllegalTransition(f"recover requires Error, got {type(state).__name__}"))
+                return Err(
+                    IllegalTransition(
+                        f"recover requires Error, got {type(state).__name__}"
+                    )
+                )
 
     @staticmethod
     def _announce(bus: EventBusState, previous: str, current: str) -> None:
-        EventBusManager.apply(bus, Publish(payload=AgentStateChanged(previous=previous, current=current)))
+        EventBusManager.apply(
+            bus, Publish(payload=AgentStateChanged(previous=previous, current=current))
+        )
 ```
 
 **Why `fail` alone is total (no `Result`) while every other morphism is partial.** This is deliberate, not an inconsistency: `fail`'s precondition is "the agent exists in *any* state," which is vacuously true — there's no illegal source state for a failure edge, since anything can go wrong from anywhere. Making the other five partial and this one total is the type system telling you, correctly, that error-handling is the one thing you don't need to guard against misuse.
@@ -118,24 +162,31 @@ class Start(Event):
     request_id: str
     prompt: str
 
+
 @dataclass(frozen=True)
 class CompletionReceived(Event):
     request_id: str
-    tool_call_id: str | None    # None ⇒ finish; present ⇒ needs_tool — the disjointness lives in the data, not a flag
+    tool_call_id: (
+        str | None
+    )  # None ⇒ finish; present ⇒ needs_tool — the disjointness lives in the data, not a flag
+
 
 @dataclass(frozen=True)
 class ToolResultReceived(Event):
     request_id: str
     result_ref: str
 
+
 @dataclass(frozen=True)
 class Failed(Event):
     reason: str
     recoverable: bool
 
+
 @dataclass(frozen=True)
 class Recover(Event):
     pass
+
 
 AgentEvent = Union[Start, CompletionReceived, ToolResultReceived, Failed, Recover]
 ```

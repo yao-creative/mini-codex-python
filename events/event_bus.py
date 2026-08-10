@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from events.base import Event
 
+from events.base import Event
 
 
 @dataclass(frozen=True)
@@ -8,10 +8,11 @@ class EventBusEvent(Event):
     pass
 
 
-
 # TODO: Define EventPayload type or class according to the requirements of EventBus events.
 # For now, this is a placeholder and must be replaced/implemented.
 EventPayload = object
+
+
 # the fact being broadcast — this IS the thing every subscriber will eventually poll
 @dataclass(frozen=True)
 class Publish(EventBusEvent):
@@ -28,6 +29,6 @@ class Subscribe(EventBusEvent):
 
 
 @dataclass(frozen=True)
-class Unsubscribe(Event):
+class Unsubscribe(EventBusEvent):
     reader_id: str
     # who's leaving — enough to drop the cursor entry

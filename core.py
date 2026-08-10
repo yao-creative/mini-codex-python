@@ -1,19 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import assert_never, Iterable
-
+from collections.abc import Iterable
+from typing import assert_never
 
 from states.agent_manager import AgentManager
-from states.core import CoreState
-from states.worker_manager import WorkerManager
 
-from events.base import Event
+from command_queue import CommandQueueManager
+from event_bus import EventBusManager
 from events.agent import AgentEvent
+from events.base import Event
 from events.command_queue import CommandQueueEvent
 from events.event_bus import EventBusEvent
 from states.app import AppState
-from command_queue import CommandQueueManager
-from event_bus import EventBusManager
-
+from states.core import CoreState
 
 
 class CoreInterface(ABC):
@@ -39,7 +37,7 @@ class Core(CoreInterface):
             case CommandQueueEvent():
                 # domain: S_cmd × S_bus — matches CommandQueueManager's actual signature
                 # TODO figure out if need to add event bus emission
-                return CommandQueueManager.apply(state.command_queue_state, event) 
+                return CommandQueueManager.apply(state.command_queue_state, event)
                 # domain: S_bus only — EventBusManager never needed to widen
             case EventBusEvent():
                 # domain: S_agent × S_bus, by the same publish-on-transition logic as CommandQueue
@@ -47,12 +45,8 @@ class Core(CoreInterface):
             case AgentEvent():
                 # TODO figure out if need to add event bus emission
                 return AgentManager.apply(state.agent_state, event)
-            case _: # only 3 disjunct case.
+            case _:  # only 3 disjunct case.
                 assert_never(event)
-            
-
-
-
 
     @staticmethod
     def run(state: CoreState, events: Iterable[Event]) -> AppState:
