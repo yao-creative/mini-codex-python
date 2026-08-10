@@ -1,8 +1,19 @@
-
-
 from abc import ABC, abstractmethod
-import asyncio
-from states.app_state import AppState
+from typing import assert_never, Iterable
+
+
+from states.agent_manager import AgentManager
+from states.core import CoreState
+from states.worker_manager import WorkerManager
+
+from events.base import Event
+from events.agent import AgentEvent
+from events.command_queue import CommandQueueEvent
+from events.event_bus import EventBusEvent
+from states.app import AppState
+from command_queue import CommandQueueManager
+from event_bus import EventBusManager
+
 
 
 class CoreInterface(ABC):
@@ -11,16 +22,40 @@ class CoreInterface(ABC):
         pass
 
     @abstractmethod
-    def run(self):
+    def run(self, state: CoreState):
         pass
 
-class Core(CoreInterface):
-    def __init__(self):
-        self.command_queue = asyncio.Queue()
-        self.event_bus = EventBus()
-        self.agent = AgentRuntime()
-        self.workers = WorkerRuntime()
-        
-    def run(self, AppState):
-        # Main logic to run the core functionality
+    @abstractmethod
+    def step(self, state: CoreState, event: Event):
         pass
+
+
+class Core(CoreInterface):
+    # constructor case for Even driven core.
+    @staticmethod
+    def apply(state: CoreState, event: Event):
+        # OR disjunction of matching managers to events\
+        match event:
+            case CommandQueueEvent():
+                # domain: S_cmd × S_bus — matches CommandQueueManager's actual signature
+                # TODO figure out if need to add event bus emission
+                return CommandQueueManager.apply(state.command_queue_state, event) 
+                # domain: S_bus only — EventBusManager never needed to widen
+            case EventBusEvent():
+                # domain: S_agent × S_bus, by the same publish-on-transition logic as CommandQueue
+                return EventBusManager.apply(state.event_bus_state, event)
+            case AgentEvent():
+                # TODO figure out if need to add event bus emission
+                return AgentManager.apply(state.agent_state, event)
+            case _: # only 3 disjunct case.
+                assert_never(event)
+            
+
+
+
+
+    @staticmethod
+    def run(state: CoreState, events: Iterable[Event]) -> AppState:
+        for e in events:
+            state = Core.apply(state, e)
+        return state
