@@ -1,6 +1,12 @@
 
 # Code Built Well and Algebraically
 
+
+## Dataclasses:
+1. All inheritances must be a complete chain of subsets eg: Event -> <StateClass>Event -> <StateClass>Event<Type>. Without a jump from 1 to 3 so that events are restricted to their state class and impossible transitions on orthogonal stateclasses are irrepresentable.
+2. 
+
+
 ## States
 1. Type definitions of Mutable containers. 
 2. All states rest on a DAG/ Poset from Config -> AppState. Incomparable states are orthogonal.
