@@ -7,4 +7,8 @@
 3. They are containers they don't own their own morphisms
 4. Each state has a manager which owns all of the morphisms of the runtime instance and the eval of morphisms on them
 
+## Events 
+1. Immutable data types.
+2. Trigger a transition to the corresponding State class via the application function of State x Event -> State'
+
 
