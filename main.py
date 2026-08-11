@@ -1,13 +1,16 @@
-from core import Core
 from bootstrap import Bootstrap
+from Session import Session
 
 
 def main(argv=None):
     # Run bootstrap logic
     app_state = Bootstrap().run(argv)
     # further processing can go here
+    # Auth can go here.
 
-    Core().run(app_state)
+    # Startup Session
+    
+    Session().run(app_state)
 
 
 if __name__ == "__main__":
