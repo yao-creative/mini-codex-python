@@ -47,7 +47,7 @@ $$\text{poll}_i : S_{bus} \times \text{Reader}_i \to \text{Result}[\text{Event},
 
 A command is an **imperative addressed to exactly one executor** — "do this" — so it's correct for it to disappear once claimed; that's what makes it a queue (linear resource, single consumption). An event is a **fact that already happened**, broadcast to however many parties care — "this occurred" — so multiple independent subscribers each need to read it at their own pace without affecting each other. Removing it after one subscriber reads it would be a bug, not an optimization.
 
-## Core morphisms on the event bus
+## Session morphisms on the event bus
 
 ```mermaid
 graph TD

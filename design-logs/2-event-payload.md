@@ -15,10 +15,10 @@ $$\text{EventPayload} = P_{cmd} + P_{agent} + P_{worker} + P_{conv}$$
 ```mermaid
 graph LR
     CQ["CommandQueueManager<br/>(producer)"] -->|"CommandEnqueued"| BUS["EventBusState.log<br/>(shared, immutable entries)"]
-    AG["AgentManager<br/>(producer)"] -->|"AgentStateChanged"| BUS
+    AG["TurnManager<br/>(producer)"] -->|"TurnLoopStateChanged"| BUS
     WK["WorkerManager<br/>(producer)"] -->|"WorkerCompleted"| BUS
     BUS -->|"cursor_1"| C1["Reader: Logger"]
-    BUS -->|"cursor_2"| C2["Reader: AgentManager"]
+    BUS -->|"cursor_2"| C2["Reader: TurnManager"]
     BUS -->|"cursor_3"| C3["Reader: Dashboard"]
 ```
 
@@ -34,8 +34,8 @@ class CommandEnqueued:
 
 
 @dataclass(frozen=True)
-class AgentStateChanged:
-    previous: str  # "Idle" / "Running" / "Error" — the tag, not the AgentState object
+class TurnLoopStateChanged:
+    previous: str  # "Idle" / "Running" / "Error" — the tag, not the TurnLoopState object
     current: str
 
 
@@ -45,12 +45,12 @@ class WorkerCompleted:
     result_ref: str  # a lookup key, not the raw result payload
 
 
-EventPayload = Union[CommandEnqueued, AgentStateChanged, WorkerCompleted]
+EventPayload = Union[CommandEnqueued, TurnLoopStateChanged, WorkerCompleted]
 ```
 
 ## Producer/consumer contract — what each side is allowed to assume
 
-**Producers** (your managers) own the *only* legitimate constructors for their slice of the coproduct — `AgentManager` is the sole author of `AgentStateChanged`, the same way it's the sole author of transitions on `AgentState`. This mirrors the algebra-map ownership from before: a manager owns $\delta_i$ *and* owns emission of $P_i$, because both derive from the same authority — "I am the thing that knows when this fact became true."
+**Producers** (your managers) own the *only* legitimate constructors for their slice of the coproduct — `TurnManager` is the sole author of `TurnLoopStateChanged`, the same way it's the sole author of transitions on `TurnLoopState`. This mirrors the algebra-map ownership from before: a manager owns $\delta_i$ *and* owns emission of $P_i$, because both derive from the same authority — "I am the thing that knows when this fact became true."
 
 **Consumers** get: a `match` that's exhaustive over `EventPayload` (same `assert_never` discipline as `CommandQueueEvent`), and a guarantee that whatever they hold after `poll_i` returns is theirs forever — no aliasing risk, no need to defensively copy on read, because immutability was enforced at construction, not at the boundary.
 
