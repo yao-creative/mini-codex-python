@@ -1,24 +1,19 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import assert_never
-
 from agent import AgentManager
-
 from command_queue import CommandQueueManager
 from event_bus import EventBusManager
 from events.agent import AgentEvent
 from events.base import Event
 from events.command_queue import CommandQueueEvent
 from events.event_bus import EventBusEvent
+from protocols.subsystem import Subsystem
 from states.app import AppState
 from states.core import CoreState
 
 
 class CoreInterface(ABC):
-    @abstractmethod
-    def __init__(self):
-        pass
-
     @abstractmethod
     def run(self, state: CoreState):
         pass
@@ -29,7 +24,7 @@ class CoreInterface(ABC):
 
 
 class Core(CoreInterface):
-    # constructor case for Even driven core.
+    # constructor case for Even driven cgore.
     @staticmethod
     def apply(state: CoreState, event: Event):
         # OR disjunction of matching managers to events\

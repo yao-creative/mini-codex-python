@@ -2,6 +2,7 @@ from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TypeVar
+from states.base import BaseState
 
 from events.base import Event
 
@@ -10,6 +11,6 @@ Handler = Callable[[T], None]
 
 
 @dataclass
-class EventBusState:
+class EventBusState(BaseState):
     log: deque[Event]
     cursors: dict[str, int]

@@ -7,10 +7,11 @@ from states.command_queue import CommandQueueState
 from states.conversation_runtime import ConversationRuntimeState
 from states.event_bus import EventBusState
 from states.worker_runtime import WorkerRuntimeState
+from states.base import BaseState
 
 
 @dataclass
-class CoreState:
+class CoreState(BaseState):
     agent_state: AgentState
     conversation_state: ConversationRuntimeState
     workers_state: WorkerRuntimeState
