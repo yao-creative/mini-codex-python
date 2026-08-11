@@ -36,3 +36,26 @@ def bind(r: Result[T, E], f: Callable[[T], Result[U, E]]) -> Result[U, E]:
             return f(v)
         case Err() as e:
             return e
+
+
+
+
+def catching(
+    f: Callable[[], T],
+    error: Callable[[Exception], E],
+) -> Result[T, E]:
+    try:
+        return Ok(f())
+    except Exception as exc:
+        return Err(error(exc))
+
+
+def map_err(
+    r: Result[T, E],
+    f: Callable[[E], U],
+) -> Result[T, U]:
+    match r:
+        case Ok():
+            return r
+        case Err(error=e):
+            return Err(f(e))
