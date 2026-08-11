@@ -32,6 +32,7 @@ class AgentManager:
     ) -> Result[AgentState, IllegalTransition]:
         match event, state:
             case Start(request_id=rid), Idle():
+                # Eventbus, Current turnloop state -> Next turnloop state.
                 return AgentManager._transition(
                     event_bus_state, state, Running(request_id=rid)
                 )

@@ -10,5 +10,7 @@ class AgentEvent:
 
 @dataclass(frozen=True)
 class AgentStateChanged(AgentEvent):
-    previous: TurnLoopState
-    current: TurnLoopState
+    request_id: str
+    previous: str            # tag name of the prior TurnLoopState variant
+    current: TurnLoopState   # the full value — Running(request_id=...) or AwaitingTool(...) etc.
+    caused_by: str | None = None

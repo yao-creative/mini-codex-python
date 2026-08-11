@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import assert_never
 
-from states.agent_manager import AgentManager
+from agent import AgentManager
 
 from command_queue import CommandQueueManager
 from event_bus import EventBusManager
@@ -37,14 +37,14 @@ class Core(CoreInterface):
             case CommandQueueEvent():
                 # domain: S_cmd × S_bus — matches CommandQueueManager's actual signature
                 # TODO figure out if need to add event bus emission
-                return CommandQueueManager.apply(state.command_queue_state, event)
+                return CommandQueueManager.apply(state.command_queue_state, state.event_bus_state, event)
                 # domain: S_bus only — EventBusManager never needed to widen
             case EventBusEvent():
                 # domain: S_agent × S_bus, by the same publish-on-transition logic as CommandQueue
                 return EventBusManager.apply(state.event_bus_state, event)
-            case AgentEvent():
+            case AgentEvent(): # define this or 
                 # TODO figure out if need to add event bus emission
-                return AgentManager.apply(state.agent_state, event)
+                return AgentManager.apply(state.agent_state, state.event_bus_state, event)
             case _:  # only 3 disjunct case.
                 assert_never(event)
 
