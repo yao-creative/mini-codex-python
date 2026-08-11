@@ -1,4 +1,5 @@
 from core import Core
+from bootstrap import Bootstrap
 
 
 def main(argv=None):

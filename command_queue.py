@@ -1,5 +1,11 @@
-from commands.command import Command
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from states.event_bus import EventBusState
+from events.event_bus import Publish
+
+
+
+from commands.command import Command
 from events.command_queue import (
     Cancel,
     Clear,
@@ -10,6 +16,7 @@ from events.command_queue import (
 )
 from monads import Err, Ok, Result
 from states.command_queue import CommandQueueState
+from event_bus import EventBusManager
 
 
 @dataclass(frozen=True)
@@ -22,7 +29,14 @@ class CommandNotFound:
     command_id: str
 
 
-class CommandQueueManager:
+class CommandQueueManagerInterface(ABC):
+    @abstractmethod
+    def apply(
+        state: CommandQueueState, event: CommandQueueEvent
+    ) -> Result[Command | None, QueueEmpty | CommandNotFound]:
+        ...
+
+class CommandQueueManager(CommandQueueManagerInterface):
     # mutation on CommandQueueState
     # mutation/ evaluator state x event -> state mutated OR (state AND Command) OR (State AND None) OR (State AND Error). an event is a function on state.
     @staticmethod
@@ -82,3 +96,12 @@ class CommandQueueManager:
         """Adds a command to the front of the queue."""
         state.queue.appendleft(cmd)
         return Ok(None)
+
+    @staticmethod
+    def _emit(event_bus_state: EventBusState):
+        EventBusManager.apply(
+                event_bus_state,
+                Publish(
+                    payload={}
+                ),
+            )

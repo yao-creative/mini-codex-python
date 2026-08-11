@@ -36,7 +36,7 @@ def parse_and_load_env(
     return args, unknown, config
 
 
-class Bootstrap_interface(ABC):
+class BootstrapInterface(ABC):
     @abstractmethod
     def __init__(self):
         pass
@@ -45,7 +45,7 @@ class Bootstrap_interface(ABC):
     def run(self, argv: list[str]) -> AppState: ...
 
 
-class Bootstrap(Bootstrap_interface):
+class Bootstrap(BootstrapInterface):
     def __init__(self):
         pass
 

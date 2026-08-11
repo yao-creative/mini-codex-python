@@ -1,7 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from events.event_bus import EventBusEvent, Publish, Subscribe, Unsubscribe, EventPayload
+from events.event_bus import (
+    EventBusEvent,
+    EventPayload,
+    Publish,
+    Subscribe,
+    Unsubscribe,
+)
 from monads import Err, Ok, Result
 from states.event_bus import EventBusState
 
@@ -14,6 +20,7 @@ class DuplicateSubscriber:
 @dataclass(frozen=True)
 class UnknownSubscriber:
     reader_id: str
+
 
 class EventBusManagerInterface(ABC):
     @abstractmethod
@@ -34,14 +41,14 @@ class EventBusManager(EventBusManagerInterface):
 
         match event:
             case Publish(payload=payload):
-                return EventBusManager.publish(state=state, payload = payload)
+                return EventBusManager.publish(state=state, payload=payload)
             case Subscribe(reader_id=reader_id, start_from=start_from):
                 return EventBusManager.subscribe(
                     state=state, reader_id=reader_id, start_from=start_from
                 )
 
             case Unsubscribe(reader_id=reader_id):
-                return EventBusManager.unsubscribe(state=state, reader_id = reader_id)
+                return EventBusManager.unsubscribe(state=state, reader_id=reader_id)
 
     @staticmethod
     def publish(state: EventBusState, payload: EventPayload) -> Result(None):
@@ -66,4 +73,3 @@ class EventBusManager(EventBusManagerInterface):
             del state.cursors[reader_id]
             return Ok(None)
         return Err(UnknownSubscriber())
-        
