@@ -3,15 +3,15 @@ import os
 from abc import ABC, abstractmethod
 
 from dotenv import load_dotenv
-from states.agent_state import AgentState
-from states.app_state import AppState
-from states.conversation_state import ConversationState
-from states.core_state import CoreState
-from states.worker_state import WorkerState
+from states.agent import TurnLoopState
 
+from states.app import AppState
 from states.command_queue import CommandQueueState
 from states.config import Config
+from states.conversation import ConversationState
+from states.session import SessionState
 from states.event_bus import EventBusState
+from states.worker import WorkerState
 
 
 def parse_and_load_env(
@@ -53,12 +53,12 @@ class Bootstrap(BootstrapInterface):
     def run(argv: list[str]) -> AppState:
         args, unknown, config = parse_and_load_env(argv)
 
-        core_state = CoreState(
+        Session_state = SessionState(
             command_queue_state=CommandQueueState(),
             event_bus_state=EventBusState(),
             conversation_state=ConversationState(),
-            agent_state=AgentState(config.agent),
+            turn_loop_state=TurnLoopState(config.agent),
             worker_state=WorkerState(config.workers),
         )
 
-        return AppState(config, core_state)
+        return AppState(config, Session_state)

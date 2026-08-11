@@ -38,8 +38,6 @@ def bind(r: Result[T, E], f: Callable[[T], Result[U, E]]) -> Result[U, E]:
             return e
 
 
-
-
 def catching(
     f: Callable[[], T],
     error: Callable[[Exception], E],

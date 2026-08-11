@@ -1,13 +1,13 @@
-Yes. Your intent is **state-space decomposition**: deciding whether `AgentState` and `TurnLoopState` are two independent state machines or whether one is a refinement of the other.
+Yes. Your intent is **state-space decomposition**: deciding whether `TurnLoopState` and `TurnLoopState` are two independent state machines or whether one is a refinement of the other.
 
-I would **not nest `TurnLoopState` inside `AgentState`**. Make them **orthogonal state components**, and let the `CoreState`/agent runtime hold their product.
+I would **not nest `TurnLoopState` inside `TurnLoopState`**. Make them **orthogonal state components**, and let the `SessionState`/agent runtime hold their product.
 
 ### Recommended structure
 
 ```python
 @dataclass
 class AgentRuntimeState:
-    agent: AgentState
+    agent: TurnLoopState
     turn_loop: TurnLoopState
 ```
 
@@ -15,15 +15,17 @@ with the typestates themselves immutable:
 
 ```python
 @dataclass(frozen=True)
-class Idle(AgentState):
+class Idle(TurnLoopState):
     pass
 
-@dataclass(frozen=True)
-class Running(AgentState):
-    request_id: str
 
 @dataclass(frozen=True)
-class AwaitingTool(AgentState):
+class Running(TurnLoopState):
+    request_id: str
+
+
+@dataclass(frozen=True)
+class AwaitingTool(TurnLoopState):
     request_id: str
     pending_tool_call: str
 ```
@@ -35,9 +37,11 @@ and separately:
 class TurnIdle(TurnLoopState):
     pass
 
+
 @dataclass(frozen=True)
 class Processing(TurnLoopState):
     turn_id: str
+
 
 @dataclass(frozen=True)
 class WaitingForInput(TurnLoopState):
@@ -50,7 +54,7 @@ $$
 AgentRuntimeState
 =================
 
-AgentState
+TurnLoopState
 \times
 TurnLoopState
 $$
@@ -58,7 +62,7 @@ $$
 This is better than:
 
 $$
-AgentState
+TurnLoopState
 ==========
 
 \cdots + (Running \times TurnLoopState) + \cdots
@@ -72,14 +76,14 @@ because the two dimensions represent different concerns.
 
 Think about what each machine answers.
 
-### `AgentState`
+### `TurnLoopState`
 
 > **What is the agent currently doing with respect to its request/tool execution?**
 
 For example:
 
 $$
-AgentState =
+TurnLoopState =
 Idle
 +
 Running
@@ -147,7 +151,7 @@ receive user message
 Then perhaps:
 
 ```text
-AgentState
+TurnLoopState
     Idle
     Running
     AwaitingTool
@@ -158,7 +162,7 @@ is already describing the lifecycle of the turn loop.
 If so, having:
 
 ```text
-AgentState
+TurnLoopState
 TurnLoopState
 ```
 
@@ -179,7 +183,7 @@ If the answer is **no**, you're probably representing the same state machine twi
 From the architecture you've been building, I'd distinguish:
 
 $$
-CoreState
+SessionState
 =========
 
 ApplicationRuntimeState
@@ -201,7 +205,7 @@ $$
 AgentRuntimeState
 =================
 
-AgentState
+TurnLoopState
 \times
 TurnLoopState
 $$
@@ -209,9 +213,9 @@ $$
 This gives you a hierarchy of **ownership**, not nesting of semantic state machines:
 
 ```text
-CoreState
+SessionState
 └── AgentRuntimeState
-    ├── AgentState
+    ├── TurnLoopState
     └── TurnLoopState
 ```
 
@@ -222,8 +226,8 @@ That's the structure I'd use.
 ## And your managers follow the same decomposition
 
 ```python
-AgentManager.apply(
-    agent_state,
+TurnManager.apply(
+    turn_loop_state,
     agent_event,
 )
 ```
@@ -243,9 +247,9 @@ Formally:
 
 $$
 T_A :
-AgentState \times AgentEvent
+TurnLoopState \times AgentEvent
 \rightarrow
-Result(AgentState, E_A)
+Result(TurnLoopState, E_A)
 $$
 
 $$
@@ -260,14 +264,14 @@ And the runtime composes them:
 $$
 T_{AgentRuntime}
 :
-(AgentState \times TurnLoopState)
+(TurnLoopState \times TurnLoopState)
 \times
 Event
 \rightarrow
-(AgentState \times TurnLoopState)
+(TurnLoopState \times TurnLoopState)
 $$
 
-This is much cleaner than having `AgentManager` know everything about the turn loop.
+This is much cleaner than having `TurnManager` know everything about the turn loop.
 
 ---
 
@@ -282,7 +286,7 @@ AgentRuntimeState
 rather than just:
 
 ```python
-AgentState
+TurnLoopState
 ```
 
 for the product:
@@ -290,13 +294,13 @@ for the product:
 ```python
 @dataclass
 class AgentRuntimeState:
-    state: AgentState
+    state: TurnLoopState
     turn_loop: TurnLoopState
 ```
 
 because then the semantic distinction is explicit:
 
-* `AgentState` = **domain typestate**
+* `TurnLoopState` = **domain typestate**
 * `TurnLoopState` = **control-flow typestate**
 * `AgentRuntimeState` = **runtime aggregate**
 

@@ -1,4 +1,4 @@
-## `AgentState` as a coproduct — the morphisms follow directly from its shape
+## `TurnLoopState` as a coproduct — the morphisms follow directly from its shape
 
 From the typestate discussion, treat each variant as carrying exactly what's needed to be *in* that state, nothing more — and let each morphism's domain be dictated by which variant it's leaving from.
 
@@ -27,7 +27,7 @@ class Error:
     recoverable: bool
 
 
-AgentState = Union[Idle, Running, AwaitingTool, Error]
+TurnLoopState = Union[Idle, Running, AwaitingTool, Error]
 ```
 
 ## The morphisms — one per legal edge, no more
@@ -51,15 +51,15 @@ graph LR
 **Why `needs_tool` and `finish` are two separate morphisms out of `Running`, not one branching morphism.** A completion from the LLM is genuinely one of two disjoint shapes — "here's a tool call to make" or "here's the final answer" — so this is itself a coproduct decision, and giving it two morphism names (rather than one `on_completion` that internally branches) keeps each morphism's postcondition singular: `needs_tool`'s postcondition is always `AwaitingTool`, `finish`'s is always `Idle`. A single branching morphism would have a *disjunctive* postcondition, which is exactly the kind of ambiguity the seL4-style discipline flagged earlier — every primitive should have one determinate outcome, not "outcome depends on content you have to re-inspect downstream."
 
 ```python
-class AgentManager:
+class TurnManager:
     @staticmethod
     def start(
-        state: AgentState, bus: EventBusState, request_id: str
-    ) -> Result[AgentState, IllegalTransition]:
+        state: TurnLoopState, bus: EventBusState, request_id: str
+    ) -> Result[TurnLoopState, IllegalTransition]:
         match state:
             case Idle():
                 new = Running(request_id=request_id)
-                AgentManager._announce(bus, "Idle", "Running")
+                TurnManager._announce(bus, "Idle", "Running")
                 return Ok(new)
             case _:
                 return Err(
@@ -70,12 +70,12 @@ class AgentManager:
 
     @staticmethod
     def needs_tool(
-        state: AgentState, bus: EventBusState, tool_call_id: str
-    ) -> Result[AgentState, IllegalTransition]:
+        state: TurnLoopState, bus: EventBusState, tool_call_id: str
+    ) -> Result[TurnLoopState, IllegalTransition]:
         match state:
             case Running(request_id=rid):
                 new = AwaitingTool(request_id=rid, pending_tool_call=tool_call_id)
-                AgentManager._announce(bus, "Running", "AwaitingTool")
+                TurnManager._announce(bus, "Running", "AwaitingTool")
                 return Ok(new)
             case _:
                 return Err(
@@ -86,12 +86,12 @@ class AgentManager:
 
     @staticmethod
     def resume(
-        state: AgentState, bus: EventBusState
-    ) -> Result[AgentState, IllegalTransition]:
+        state: TurnLoopState, bus: EventBusState
+    ) -> Result[TurnLoopState, IllegalTransition]:
         match state:
             case AwaitingTool(request_id=rid):
                 new = Running(request_id=rid)
-                AgentManager._announce(bus, "AwaitingTool", "Running")
+                TurnManager._announce(bus, "AwaitingTool", "Running")
                 return Ok(new)
             case _:
                 return Err(
@@ -102,11 +102,11 @@ class AgentManager:
 
     @staticmethod
     def finish(
-        state: AgentState, bus: EventBusState
-    ) -> Result[AgentState, IllegalTransition]:
+        state: TurnLoopState, bus: EventBusState
+    ) -> Result[TurnLoopState, IllegalTransition]:
         match state:
             case Running():
-                AgentManager._announce(bus, "Running", "Idle")
+                TurnManager._announce(bus, "Running", "Idle")
                 return Ok(Idle())
             case _:
                 return Err(
@@ -117,20 +117,20 @@ class AgentManager:
 
     @staticmethod
     def fail(
-        state: AgentState, bus: EventBusState, reason: str, recoverable: bool
-    ) -> AgentState:
-        AgentManager._announce(bus, type(state).__name__, "Error")
+        state: TurnLoopState, bus: EventBusState, reason: str, recoverable: bool
+    ) -> TurnLoopState:
+        TurnManager._announce(bus, type(state).__name__, "Error")
         return Error(
             reason=reason, recoverable=recoverable
         )  # total — fail is defined from every state, so no Result
 
     @staticmethod
     def recover(
-        state: AgentState, bus: EventBusState
-    ) -> Result[AgentState, IllegalTransition]:
+        state: TurnLoopState, bus: EventBusState
+    ) -> Result[TurnLoopState, IllegalTransition]:
         match state:
             case Error(recoverable=True):
-                AgentManager._announce(bus, "Error", "Idle")
+                TurnManager._announce(bus, "Error", "Idle")
                 return Ok(Idle())
             case Error(recoverable=False):
                 return Err(
@@ -148,7 +148,7 @@ class AgentManager:
     @staticmethod
     def _announce(bus: EventBusState, previous: str, current: str) -> None:
         EventBusManager.apply(
-            bus, Publish(payload=AgentStateChanged(previous=previous, current=current))
+            bus, Publish(payload=TurnLoopStateChanged(previous=previous, current=current))
         )
 ```
 

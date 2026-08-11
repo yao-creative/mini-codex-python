@@ -1,11 +1,8 @@
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from states.event_bus import EventBusState
-from events.event_bus import Publish
-
-
+from dataclasses import dataclass
 
 from commands.command import Command
+from event_bus import EventBusManager
 from events.command_queue import (
     Cancel,
     Clear,
@@ -14,9 +11,10 @@ from events.command_queue import (
     Enqueue,
     Requeue,
 )
+from events.event_bus import Publish
 from monads import Err, Ok, Result
 from states.command_queue import CommandQueueState
-from event_bus import EventBusManager
+from states.event_bus import EventBusState
 
 
 @dataclass(frozen=True)
@@ -33,8 +31,8 @@ class CommandQueueManagerInterface(ABC):
     @abstractmethod
     def apply(
         state: CommandQueueState, event: CommandQueueEvent
-    ) -> Result[Command | None, QueueEmpty | CommandNotFound]:
-        ...
+    ) -> Result[Command | None, QueueEmpty | CommandNotFound]: ...
+
 
 class CommandQueueManager(CommandQueueManagerInterface):
     # mutation on CommandQueueState
@@ -100,8 +98,6 @@ class CommandQueueManager(CommandQueueManagerInterface):
     @staticmethod
     def _emit(event_bus_state: EventBusState):
         EventBusManager.apply(
-                event_bus_state,
-                Publish(
-                    payload={}
-                ),
-            )
+            event_bus_state,
+            Publish(payload={}),
+        )

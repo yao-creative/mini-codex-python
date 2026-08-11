@@ -1,10 +1,10 @@
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import httpx
-from adapters.base import Adapter
-from monads import Result, Ok, Err, catching, bind
 
+import httpx
+
+from adapters.base import Adapter
+from monads import Err, Ok, Result, bind, catching
 
 
 @dataclass(frozen=True)
@@ -38,29 +38,29 @@ class InvalidLLMResponse(LLMError):
     pass
 
 
-
-
-
 class LLMAadapter(Adapter[LLMRequest, LLMResponse], ABC):
     """Domain-level LLM adapter."""
 
     @abstractmethod
     @staticmethod
-    async def complete(base_url: str, request: LLMRequest, client: httpx.AsyncClient = httpx.AsyncClient()) ->  Result[LLMResponse, LLMError]:
-        ...
+    async def complete(
+        base_url: str,
+        request: LLMRequest,
+        client: httpx.AsyncClient = httpx.AsyncClient(),
+    ) -> Result[LLMResponse, LLMError]: ...
 
 
 class OllamaLLMAdapter(LLMAadapter):
     """Ollama HTTP adapter."""
-    
+
     @staticmethod
     def complete(
-        self,
         request: LLMRequest,
+        client: httpx.AsyncClient = httpx.AsyncClient()
     ) -> Result[LLMResponse, LLMError]:
 
         response = catching(
-            lambda: self._client.post(
+            lambda: client.post(
                 "/api/generate",
                 json={"prompt": request.prompt},
             ),
@@ -74,7 +74,7 @@ class OllamaLLMAdapter(LLMAadapter):
 
     @staticmethod
     def _parse_response(
-    response: httpx.Response,
+        response: httpx.Response,
     ) -> Result[LLMResponse, LLMError]:
         try:
             response.raise_for_status()
@@ -82,10 +82,8 @@ class OllamaLLMAdapter(LLMAadapter):
             return Ok(LLMResponse(data["response"]))
 
         except (httpx.HTTPError, ValueError, KeyError) as exc:
-            return Err(
-                InvalidLLMResponse(str(exc))
-            )
-    
+            return Err(InvalidLLMResponse(str(exc)))
+
     @staticmethod
     def to_model_error(exc: Exception) -> Result[LLMError]:
         if isinstance(exc, httpx.TimeoutException):
@@ -94,5 +92,4 @@ class OllamaLLMAdapter(LLMAadapter):
         if isinstance(exc, httpx.ConnectError):
             return ModelUnavailable("Ollama unavailable")
 
-        raise AssertionError(f"Unhandled exception: {exc!r}"))
-
+        raise AssertionError(f"Unhandled exception: {exc!r}")
