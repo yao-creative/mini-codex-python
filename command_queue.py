@@ -58,7 +58,7 @@ class CommandQueueManager(CommandQueueManagerInterface):
 
     # mutations
     @staticmethod
-    def enqueue(state: CommandQueueState, cmd: Command) -> None:
+    def enqueue(state: CommandQueueState, cmd: Command) -> Result[None]:
         state.queue.append(cmd)
 
     @staticmethod
@@ -84,13 +84,13 @@ class CommandQueueManager(CommandQueueManagerInterface):
 
     # Guaranteed state of None if cleared
     @staticmethod
-    def clear(state: CommandQueueState) -> Result(None):
+    def clear(state: CommandQueueState) -> Result[None]:
         """Removes all commands from the queue."""
         state.queue.clear()
         return Ok(None)
 
     @staticmethod
-    def enqueue_front(state: CommandQueueState, cmd: Command) -> None:
+    def enqueue_front(state: CommandQueueState, cmd: Command) -> Result[None]:
         """Adds a command to the front of the queue."""
         state.queue.appendleft(cmd)
         return Ok(None)

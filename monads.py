@@ -48,6 +48,7 @@ def catching(
         return Err(error(exc))
 
 
+# map_err: (E → U) → (Result[T, E] → Result[T, U])
 def map_err(
     r: Result[T, E],
     f: Callable[[E], U],
@@ -57,3 +58,56 @@ def map_err(
             return r
         case Err(error=e):
             return Err(f(e))
+
+
+# Generic Reader Monad:
+from __future__ import annotations
+
+R = TypeVar("R")
+@dataclass(frozen=True)
+class Reader(Generic[R, T]):
+    run: Callable[[R], T]
+
+    def map(self, f: Callable[[T], U]) -> Reader[R, U]:
+        return Reader(lambda env: f(self.run(env)))
+
+    def and_then(
+        self,
+        f: Callable[[T], Reader[R, U]],
+    ) -> Reader[R, U]:
+        return Reader(lambda env: f(self.run(env)).run(env))
+
+
+# Writer Monad:
+A = TypeVar("A")
+B = TypeVar("B")
+W = TypeVar("W")
+
+
+@dataclass(frozen=True)
+class Writer(Generic[A, W]):
+    value: A
+    output: W
+    def map(
+        self,
+        f: Callable[[A], B],
+    ) -> Writer[B, W]:
+        return Writer(
+            value=f(self.value),
+            output=self.output,
+        )
+
+    def and_then(
+        self,
+        f: Callable[[A], Writer[B, W]],
+        combine: Callable[[W, W], W],
+    ) -> Writer[B, W]:
+        next_result = f(self.value)
+
+        return Writer(
+            value=next_result.value,
+            output=combine(
+                self.output,
+                next_result.output,
+            ),
+        )

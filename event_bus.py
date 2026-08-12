@@ -8,9 +8,12 @@ from events.event_bus import (
     Subscribe,
     Unsubscribe,
 )
-from monads import Err, Ok, Result
+from monads import Err, Ok, Result, Writer
 from states.event_bus import EventBusState
 
+from typing import TypeVar
+
+T = TypeVar("T")
 
 @dataclass(frozen=True)
 class DuplicateSubscriber:
@@ -73,3 +76,35 @@ class EventBusManager(EventBusManagerInterface):
             del state.cursors[reader_id]
             return Ok(None)
         return Err(UnknownSubscriber())
+
+
+EventBusWriter = Writer[T, tuple[EventBusEvent, ...]]
+
+
+T = TypeVar("T")
+
+
+# @dataclass(frozen=True)
+# class EventBusWriter(Generic[T]):
+#     value: T
+#     events: tuple[Event, ...]
+
+#     def map(
+#         self,
+#         f: Callable[[T], U],
+#     ) -> EventBusWriter[U]:
+#         return EventBusWriter(
+#             value=f(self.value),
+#             events=self.events,
+#         )
+
+#     def and_then(
+#         self,
+#         f: Callable[[T], EventBusWriter[U]],
+#     ) -> EventBusWriter[U]:
+#         next_result = f(self.value)
+
+#         return EventBusWriter(
+#             value=next_result.value,
+#             events=self.events + next_result.events,
+#         )

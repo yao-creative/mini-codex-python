@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from events.base import Event
 
 
-#Internal to Turn loop events.
+# Internal to Turn loop events.
 @dataclass(frozen=True)
 class TurnLoopEvent(Event):
     """E_cmd — abstract base; never constructed directly, only its variants below."""
@@ -44,7 +44,3 @@ class Recover(TurnLoopEvent):
 
 class Error(TurnLoopEvent):
     recoverable: bool
-
-
-
-
