@@ -35,7 +35,9 @@ class CommandEnqueued:
 
 @dataclass(frozen=True)
 class TurnLoopStateChanged:
-    previous: str  # "Idle" / "Running" / "Error" — the tag, not the TurnLoopState object
+    previous: (
+        str  # "Idle" / "Running" / "Error" — the tag, not the TurnLoopState object
+    )
     current: str
 
 

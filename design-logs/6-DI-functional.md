@@ -11,6 +11,7 @@ from typing import Protocol
 # 1. DOMAIN STATE
 # ============================================================
 
+
 @dataclass(frozen=True)
 class AgentState:
     messages: tuple[str, ...] = ()
@@ -35,6 +36,7 @@ class AppState:
 # 2. CAPABILITY INTERFACES
 # ============================================================
 
+
 class EventSink(Protocol):
     def emit(self, event: str) -> None: ...
 
@@ -50,6 +52,7 @@ class Storage(Protocol):
 # ============================================================
 # 3. CONCRETE INFRASTRUCTURE
 # ============================================================
+
 
 class EventBus:
     def emit(self, event: str) -> None:
@@ -73,6 +76,7 @@ class MemoryStorage:
 # 4. ENVIRONMENT / CAPABILITIES
 # ============================================================
 
+
 @dataclass(frozen=True)
 class AppEnv:
     events: EventSink
@@ -84,18 +88,13 @@ class AppEnv:
 # 5. PURE-ish DOMAIN TRANSITIONS
 # ============================================================
 
+
 def start_session(state: AppState) -> AppState:
-    return AppState(
-        session=SessionState()
-    )
+    return AppState(session=SessionState())
 
 
 def start_conversation(state: SessionState) -> SessionState:
-    return SessionState(
-        conversation=ConversationState(
-            agent=AgentState()
-        )
-    )
+    return SessionState(conversation=ConversationState(agent=AgentState()))
 
 
 def agent_turn(
@@ -109,7 +108,8 @@ def agent_turn(
     env.storage.save("last_response", response)
 
     return AgentState(
-        messages=state.messages + (
+        messages=state.messages
+        + (
             prompt,
             response,
         )
@@ -285,9 +285,7 @@ def agent_turn(
     response = model.complete(prompt)
 
     return AgentResult(
-        state=AgentState(
-            messages=state.messages + (prompt, response)
-        ),
+        state=AgentState(messages=state.messages + (prompt, response)),
         events=("AgentCompleted",),
         writes=(("last_response", response),),
     )

@@ -32,9 +32,13 @@ Because `EventBusManager` is stateless, "used by two callers" carries **zero** o
 def make_command_queue_subsystem(manager: type[CommandQueueManager]) -> type[Subsystem]:
     class _Sub(Subsystem):
         @staticmethod
-        def owns(event): return isinstance(event, CommandQueueEvent)
+        def owns(event):
+            return isinstance(event, CommandQueueEvent)
+
         @staticmethod
-        def apply(state, event): return manager.apply(state.command_queue, state.event_bus, event)
+        def apply(state, event):
+            return manager.apply(state.command_queue, state.event_bus, event)
+
     return _Sub
 ```
 

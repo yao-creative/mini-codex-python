@@ -148,7 +148,8 @@ class TurnManager:
     @staticmethod
     def _announce(bus: EventBusState, previous: str, current: str) -> None:
         EventBusManager.apply(
-            bus, Publish(payload=TurnLoopStateChanged(previous=previous, current=current))
+            bus,
+            Publish(payload=TurnLoopStateChanged(previous=previous, current=current)),
         )
 ```
 
