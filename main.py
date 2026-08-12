@@ -7,9 +7,8 @@ def main(argv=None):
     app_state = Bootstrap().run(argv)
     # further processing can go here
     # Auth can go here.
-
     # Startup Session
-    
+
     Session().run(app_state)
 
 

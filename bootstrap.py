@@ -4,13 +4,13 @@ from abc import ABC, abstractmethod
 
 from dotenv import load_dotenv
 from states.agent import TurnLoopState
+from states.conversation import ConversationState
 
 from states.app import AppState
 from states.command_queue import CommandQueueState
 from states.config import Config
-from states.conversation import ConversationState
-from states.session import SessionState
 from states.event_bus import EventBusState
+from states.session import SessionState
 from states.worker import WorkerState
 
 
@@ -56,7 +56,6 @@ class Bootstrap(BootstrapInterface):
         Session_state = SessionState(
             command_queue_state=CommandQueueState(),
             event_bus_state=EventBusState(),
-            conversation_state=ConversationState(),
             turn_loop_state=TurnLoopState(config.agent),
             worker_state=WorkerState(config.workers),
         )

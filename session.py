@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import assert_never
 
-from turn import TurnManager
-
 from command_queue import CommandQueueManager
 from event_bus import EventBusManager
 from events.base import Event
@@ -12,6 +10,7 @@ from events.event_bus import EventBusEvent
 from events.turn_loop import TurnLoopEvent
 from states.app import AppState
 from states.session import SessionState
+from turn import TurnManager
 
 
 class SessionInterface(ABC):
