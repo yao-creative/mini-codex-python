@@ -55,8 +55,7 @@ class OllamaLLMAdapter(LLMAadapter):
 
     @staticmethod
     def complete(
-        request: LLMRequest,
-        client: httpx.AsyncClient = httpx.AsyncClient()
+        request: LLMRequest, client: httpx.AsyncClient = httpx.AsyncClient()
     ) -> Result[LLMResponse, LLMError]:
 
         response = catching(
