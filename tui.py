@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from states.event_bus import EventBusState
-from events.event_bus import Subscribe, 
+from events.event_bus import Subscribe
 from event_bus import EventBusManager
 from monads import Result
 
