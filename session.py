@@ -15,15 +15,11 @@ from turn import TurnManager
 
 class SessionInterface(ABC):
     @abstractmethod
-    def __init__(self):
-        pass
-
-    @abstractmethod
     def run(self, state: SessionState):
         pass
 
     @abstractmethod
-    def step(self, state: SessionState, event: Event):
+    def apply(self, state: SessionState, event: Event):
         pass
 
 

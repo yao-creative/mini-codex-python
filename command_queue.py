@@ -95,9 +95,3 @@ class CommandQueueManager(CommandQueueManagerInterface):
         state.queue.appendleft(cmd)
         return Ok(None)
 
-    @staticmethod
-    def _emit(event_bus_state: EventBusState):
-        EventBusManager.apply(
-            event_bus_state,
-            Publish(payload={}),
-        )

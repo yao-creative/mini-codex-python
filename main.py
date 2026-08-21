@@ -9,7 +9,6 @@ def main(argv=None):
     # Auth can go here.
     # Startup Session
 
-    Session().run(app_state)
 
 
 if __name__ == "__main__":

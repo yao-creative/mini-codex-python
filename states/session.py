@@ -11,5 +11,4 @@ from type_states.turn_loop import TurnLoopState
 class SessionState:
     turn_loop_state: TurnLoopState
     workers_state: WorkerRuntimeState
-    command_queue_state: CommandQueueState
     event_bus_state: EventBusState
